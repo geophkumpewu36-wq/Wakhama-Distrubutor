@@ -1,95 +1,38 @@
-<!DOCTYPE html>
-<html lang="ny">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Log In - Wakhama Distributor</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        .bg-spotify-green { background-color: #1DB954; }
-        .text-spotify-green { color: #1DB954; }
-    </style>
-</head>
-<body class="bg-[#0b0f17] text-white min-h-screen flex items-center justify-center p-4">
+'use client'
+import { createClient } from '@/utils/supabase/client'
+import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 
-    <div class="bg-[#161b26] p-8 rounded-2xl border border-gray-800 w-full max-w-md text-center space-y-6">
-        <h2 class="text-2xl font-bold">Lowa mu Wakhama</h2>
-        <p class="text-gray-400 text-sm">Lowa ndi Gmail kapena Phone Number kuti mumvetsere ndi kutsitsa nyimbo.</p>
+export default function LoginPage() {
+  const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
+  const router = useRouter()
+  const supabase = createClient()
 
-        <!-- Google Login -->
-        <button type="button" onclick="loginGoogle()" class="w-full bg-white text-black font-bold py-3 rounded-xl flex items-center justify-center gap-3 hover:bg-gray-200 transition">
-            <i class="fa-brands fa-google text-red-500 text-xl"></i> Lowa ndi Gmail
-        </button>
+  const handleLogin = async (e) => {
+    e.preventDefault() // IYI NDIYOFUNIKA KWA MBI
+    console.log("ikuyesera kulowa...")
+    
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    })
 
-        <div class="text-xs text-gray-500 font-bold uppercase">KAPENA</div>
+    if (error) {
+      alert("Error: " + error.message)
+      console.log(error)
+    } else {
+      console.log("Yalowa:", data)
+      router.push('/dashboard') // kapena /distributor page yako
+      router.refresh()
+    }
+  }
 
-        <!-- Phone Login -->
-        <div class="space-y-3">
-            <input type="tel" id="userPhone" placeholder="+265 99... / +265 88..." class="w-full bg-[#0b0f17] border border-gray-700 p-3 rounded-xl text-white text-sm focus:outline-none focus:border-green-500">
-            <button type="button" id="phoneBtn" onclick="loginPhone()" class="w-full bg-spotify-green text-black font-bold py-3 rounded-xl hover:opacity-90 transition">
-                <i class="fa-solid fa-phone mr-1"></i> Lowa ndi Phone Number
-            </button>
-        </div>
-    </div>
-
-    <script>
-        async function loginGoogle() {
-            const email = prompt("Ikani Email yanu ya Gmail:");
-            if (!email) return;
-            
-            try {
-                const res = await fetch('/api/auth/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ loginType: 'google', identifier: email })
-                });
-                const data = await res.json();
-                
-                if (data.success) {
-                    localStorage.setItem('user', JSON.stringify(data.user));
-                    window.location.href = 'music.html';
-                } else {
-                    alert("Zakanika: " + (data.message || "Vuto lapezeka"));
-                }
-            } catch (err) {
-                // Mukasagwiritsa backend (offline mode fallback)
-                console.log("Server siikuyenda, tikugwiritsa ntchito LocalStorage yokha...");
-                localStorage.setItem('user', JSON.stringify({ id: Date.now().toString(), loginType: 'google', identifier: email }));
-                window.location.href = 'music.html';
-            }
-        }
-
-        async function loginPhone() {
-            const phoneInput = document.getElementById('userPhone');
-            const phone = phoneInput ? phoneInput.value.trim() : '';
-
-            if(!phone) {
-                alert("Chonde ikani nambala yanu ya foni!");
-                return;
-            }
-
-            try {
-                const res = await fetch('/api/auth/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ loginType: 'phone', identifier: phone })
-                });
-                const data = await res.json();
-
-                if (data.success) {
-                    localStorage.setItem('user', JSON.stringify(data.user));
-                    window.location.href = 'music.html';
-                } else {
-                    alert("Zakanika: " + (data.message || "Vuto lapezeka"));
-                }
-            } catch (err) {
-                // Mukasagwiritsa backend (offline mode fallback)
-                console.log("Server siikuyenda, tikugwiritsa ntchito LocalStorage yokha...");
-                localStorage.setItem('user', JSON.stringify({ id: Date.now().toString(), loginType: 'phone', identifier: phone }));
-                window.location.href = 'music.html';
-            }
-        }
-    </script>
-</body>
-</html>
+  return (
+    <form onSubmit={handleLogin}>
+      <input type="email" onChange={(e) => setEmail(e.target.value)} />
+      <input type="password" onChange={(e) => setPassword(e.target.value)} />
+      <button type="submit">Log In</button>
+    </form>
+  )
+}
