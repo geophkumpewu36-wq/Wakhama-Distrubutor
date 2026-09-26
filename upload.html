@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="ny">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Nyimbo - Wakhama Distributor</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .bg-spotify-green { background-color: #1DB954; }
+        .text-spotify-green { color: #1DB954; }
+    </style>
+</head>
+<body class="bg-[#0b0f17] text-white min-h-screen flex flex-col justify-between p-4">
+
+    <header class="max-w-4xl mx-auto w-full flex justify-between items-center py-4 border-b border-gray-800">
+        <h1 class="text-xl font-bold text-spotify-green flex items-center gap-2">
+            <i class="fa-solid fa-cloud-arrow-up"></i> Upload Nyimbo Yatsopano
+        </h1>
+        <a href="index.html" class="text-xs text-gray-400 hover:text-white">← Bwererani Tsamba Leni Leni</a>
+    </header>
+
+    <main class="max-w-xl mx-auto w-full my-8 bg-[#161b26] p-8 rounded-2xl border border-gray-800 space-y-4">
+        <div>
+            <label class="block text-xs font-bold text-gray-400 mb-1">DZINA LA OYIMBA (ARTIST NAME)</label>
+            <input type="text" id="artistName" placeholder="Chitsanzo: Geoph K" class="w-full bg-[#0b0f17] border border-gray-700 p-3 rounded-xl text-sm focus:outline-none focus:border-green-500">
+        </div>
+
+        <div>
+            <label class="block text-xs font-bold text-gray-400 mb-1">MUTU WA NYIMBO (SONG TITLE)</label>
+            <input type="text" id="songTitle" placeholder="Chitsanzo: Malawi Kwacha" class="w-full bg-[#0b0f17] border border-gray-700 p-3 rounded-xl text-sm focus:outline-none focus:border-green-500">
+        </div>
+
+        <div>
+            <label class="block text-xs font-bold text-gray-400 mb-1">MTENGO WA NYIMBO (PRICE IN MWK)</label>
+            <input type="number" id="songPrice" value="100" class="w-full bg-[#0b0f17] border border-gray-700 p-3 rounded-xl text-sm focus:outline-none focus:border-green-500">
+        </div>
+
+        <div>
+            <label class="block text-xs font-bold text-gray-400 mb-1">LINK YA AUDIO / SONG (URL)</label>
+            <input type="url" id="audioUrl" placeholder="https://..." class="w-full bg-[#0b0f17] border border-gray-700 p-3 rounded-xl text-sm focus:outline-none focus:border-green-500">
+        </div>
+
+        <button onclick="uploadSong()" class="w-full bg-spotify-green text-black font-bold py-3 rounded-xl hover:opacity-90 transition mt-4">
+            <i class="fa-solid fa-upload mr-1"></i> Tumizani Nyimbo Mu System
+        </button>
+    </main>
+
+    <footer class="text-center text-xs text-gray-600 py-4">
+        © 2026 Wakhama Distributor. All Rights Reserved.
+    </footer>
+
+    <script>
+        async function uploadSong() {
+            const artistName = document.getElementById('artistName').value.trim();
+            const songTitle = document.getElementById('songTitle').value.trim();
+            const price = document.getElementById('songPrice').value;
+            const audioUrl = document.getElementById('audioUrl').value.trim();
+
+            if (!artistName || !songTitle || !audioUrl) {
+                alert("Chonde dzazani mfundo zonse zomwe zikufunika!");
+                return;
+            }
+
+            try {
+                const res = await fetch('/api/songs/upload', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ artistName, songTitle, price: Number(price), audioUrl })
+                });
+                const data = await res.json();
+
+                if (data.success) {
+                    alert("Nyimbo yatumizidwa bwino!");
+                    window.location.href = 'music.html';
+                } else {
+                    alert("Zakanika: " + data.message);
+                }
+            } catch (e) {
+                alert("Vuto lapezeka polumikizana ndi server.");
+            }
+        }
+    </script>
+</body>
+</html>
