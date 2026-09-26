@@ -1,29 +1,44 @@
-// Supabase client yanu
-const SUPABASE_URL = 'https://cujvhqwnxdgxawylyzsp.supabase.co/rest/v1/' //
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN1anZocXdueGRneGF3eWx5enNwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0MDc4OTgsImV4cCI6MjEwNTk4Mzg5OH0.niDWmseYMc6zvP4eqUBA7NNF9gsl5p4u4X05rN-tVGw' // 
+// Function yo-check ngati munthu walowa mu system
+function checkUserAuth() {
+    const rawUser = localStorage.getItem('wakhama_user') || localStorage.getItem('user');
+    
+    if (!rawUser) {
+        // Ngati mulibe login data, bwererani ku login.html
+        if (!window.location.pathname.includes('login.html') && !window.location.pathname.includes('index.html')) {
+            window.location.href = 'login.html';
+        }
+        return null;
+    }
 
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY)
-
-// Yang'ana ngati munthu walowa kale
-async function checkUser() {
-  const { data: { session } } = await supabase.auth.getSession()
-  console.log("Session:", session)
-  return session
+    try {
+        return JSON.parse(rawUser);
+    } catch (e) {
+        localStorage.removeItem('wakhama_user');
+        localStorage.removeItem('user');
+        window.location.href = 'login.html';
+        return null;
+    }
 }
 
-document.getElementById('loginForm').addEventListener('submit', async (e) => {
-  e.preventDefault() // IYI NDIYOFUNIKA KWAMBIRI, ngati mulibe imeneyi, ndiye ndiye imathawitsa
+// Function yo-Logout
+function logoutUser() {
+    localStorage.removeItem('wakhama_user');
+    localStorage.removeItem('user');
+    window.location.href = 'login.html';
+}
 
-  const email = document.getElementById('email').value
-  const password = document.getElementById('password').value
+// Tsimikizirani munthu pa tsamba la artist kapena music
+document.addEventListener('DOMContentLoaded', () => {
+    const currentPage = window.location.pathname;
 
-  const { data, error } = await supabase.auth.signInWithPassword({ email, password })
-
-  if(error){
-    alert(error.message)
-  } else {
-    // Osapanga window.location = 'index.html' mwachangu
-    // Dikirani kaye
-    window.location.href = 'admin.html' // kapena index.html
-  }
-})
+    // Ngati muli pa artist.html kapena music.html, tsimikizirani auth
+    if (currentPage.includes('artist.html') || currentPage.includes('music.html')) {
+        const user = checkUserAuth();
+        if (user) {
+            const userBadge = document.getElementById('userBadge') || document.getElementById('artistNameDisplay');
+            if (userBadge) {
+                userBadge.innerText = user.identifier || user.email || user.phone || 'User Account';
+            }
+        }
+    }
+});
