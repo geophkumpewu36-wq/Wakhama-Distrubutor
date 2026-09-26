@@ -33,22 +33,34 @@
         </div>
     </div>
 
+    <script src="client.js"></script>
     <script>
-        function setLoginSession(userData) {
-            // Salvează în toate cheile posibile pentru a preveni deconectarea
+        function saveAndRedirect(userData) {
             localStorage.setItem('user', JSON.stringify(userData));
             localStorage.setItem('wakhama_user', JSON.stringify(userData));
-            localStorage.setItem('token', 'active_session');
-            window.location.href = 'music.html';
+            window.location.replace('music.html');
         }
 
-        function loginGoogle() {
+        async function loginGoogle() {
             const email = prompt("Ikani Email yanu ya Gmail:");
             if (!email) return;
-            setLoginSession({ id: Date.now().toString(), type: 'gmail', identifier: email, email: email });
+
+            const userData = { id: Date.now().toString(), type: 'gmail', identifier: email };
+
+            try {
+                await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ loginType: 'google', identifier: email })
+                });
+            } catch (e) {
+                console.log("Offline mode");
+            }
+
+            saveAndRedirect(userData);
         }
 
-        function loginPhone() {
+        async function loginPhone() {
             const phoneInput = document.getElementById('userPhone');
             const phone = phoneInput ? phoneInput.value.trim() : '';
 
@@ -57,7 +69,19 @@
                 return;
             }
 
-            setLoginSession({ id: Date.now().toString(), type: 'phone', identifier: phone, phone: phone });
+            const userData = { id: Date.now().toString(), type: 'phone', identifier: phone };
+
+            try {
+                await fetch('/api/auth/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ loginType: 'phone', identifier: phone })
+                });
+            } catch (e) {
+                console.log("Offline mode");
+            }
+
+            saveAndRedirect(userData);
         }
     </script>
 </body>

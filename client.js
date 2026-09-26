@@ -1,44 +1,38 @@
-// Function yo-check ngati munthu walowa mu system
-function checkUserAuth() {
-    const rawUser = localStorage.getItem('wakhama_user') || localStorage.getItem('user');
-    
-    if (!rawUser) {
-        // Ngati mulibe login data, bwererani ku login.html
-        if (!window.location.pathname.includes('login.html') && !window.location.pathname.includes('index.html')) {
-            window.location.href = 'login.html';
-        }
-        return null;
-    }
-
+// Function yo-check munthu ngati walowa
+function getLoggedInUser() {
+    const userStr = localStorage.getItem('user') || localStorage.getItem('wakhama_user');
+    if (!userStr) return null;
     try {
-        return JSON.parse(rawUser);
+        return JSON.parse(userStr);
     } catch (e) {
-        localStorage.removeItem('wakhama_user');
-        localStorage.removeItem('user');
-        window.location.href = 'login.html';
         return null;
     }
 }
 
-// Function yo-Logout
-function logoutUser() {
-    localStorage.removeItem('wakhama_user');
-    localStorage.removeItem('user');
-    window.location.href = 'login.html';
-}
-
-// Tsimikizirani munthu pa tsamba la artist kapena music
+// Kukonza tsamba lokha mukalowa
 document.addEventListener('DOMContentLoaded', () => {
-    const currentPage = window.location.pathname;
+    const currentUser = getLoggedInUser();
+    const currentPath = window.location.pathname;
 
-    // Ngati muli pa artist.html kapena music.html, tsimikizirani auth
-    if (currentPage.includes('artist.html') || currentPage.includes('music.html')) {
-        const user = checkUserAuth();
-        if (user) {
-            const userBadge = document.getElementById('userBadge') || document.getElementById('artistNameDisplay');
-            if (userBadge) {
-                userBadge.innerText = user.identifier || user.email || user.phone || 'User Account';
-            }
-        }
+    // Ngati muli pa tsamba la login kapena index, musamukankhire kulikonse
+    if (currentPath.includes('login.html') || currentPath.includes('index.html')) {
+        return;
+    }
+
+    // Ngati mulibe user ndipo muli pa tsamba la music, upload kapena admin, mutumizeni ku login
+    if (!currentUser) {
+        window.location.href = 'login.html';
+        return;
+    }
+
+    // Ngati walowa, onetsani dzina lake
+    const userBadge = document.getElementById('userBadge') || document.getElementById('artistNameDisplay');
+    if (userBadge) {
+        userBadge.innerText = "Logged in: " + (currentUser.identifier || currentUser.email || currentUser.phone || 'User');
     }
 });
+
+function logoutUser() {
+    localStorage.clear();
+    window.location.href = 'login.html';
+}
