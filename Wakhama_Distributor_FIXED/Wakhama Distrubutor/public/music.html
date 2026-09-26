@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="ny">
+<head>
+    <meta charset="UTF-8">
+    <title>Mvetserani & Tsitsani - Wakhama</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>.text-spotify-green { color: #1DB954; } .bg-spotify-green { background-color: #1DB954; }</style>
+</head>
+<body class="bg-[#0b0f17] text-white p-6 min-h-screen">
+    <div class="max-w-4xl mx-auto space-y-6">
+        <header class="flex justify-between items-center border-b border-gray-800 pb-4">
+            <h1 class="text-2xl font-bold text-spotify-green flex items-center gap-2"><i class="fa-solid fa-headphones"></i> Wakhama Music Stream & Download</h1>
+            <div id="userBadge" class="text-xs bg-gray-800 px-3 py-1.5 rounded-full text-gray-300"></div>
+        </header>
+        <div id="songsList" class="grid grid-cols-1 md:grid-cols-2 gap-4"></div>
+    </div>
+    <script>
+        const user = JSON.parse(localStorage.getItem('user'));
+        if(!user) { window.location.href = 'login.html'; } 
+        else { document.getElementById('userBadge').innerText = "Logged in: " + user.identifier; }
+
+        async function loadSongs() {
+            const res = await fetch('/api/songs');
+            const songs = await res.json();
+            const container = document.getElementById('songsList');
+            container.innerHTML = songs.map(song => `
+                <div class="bg-[#161b26] p-4 rounded-xl border border-gray-800 space-y-3">
+                    <h3 class="font-bold text-white">${song.songTitle} - ${song.artistName}</h3>
+                    <p class="text-xs text-gray-400">Mtengo: MK ${song.price || 100}</p>
+                    <audio controls src="${song.audioUrl}" class="w-full h-8"></audio>
+                    <button onclick="downloadSong('${song.id}')" class="w-full bg-spotify-green text-black font-bold py-2 rounded-lg text-xs">
+                        <i class="fa-solid fa-download"></i> Lipira (MK ${song.price || 100}) & Tsitsa
+                    </button>
+                </div>
+            `).join('');
+        }
+        async function downloadSong(songId) {
+            const res = await fetch('/api/songs/' + songId + '/download', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ userId: user.id }) });
+            const data = await res.json();
+            if (data.success) { window.location.href = data.downloadUrl; }
+        }
+        loadSongs();
+    </script>
+</body>
+</html>

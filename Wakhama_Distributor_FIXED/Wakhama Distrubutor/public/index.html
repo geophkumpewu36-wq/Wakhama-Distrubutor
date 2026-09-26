@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="ny">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wakhama Distributor</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+body{background:#070a0f;color:#eee;font-family:Arial,sans-serif}.card{background:#111722;border:1px solid #263040}
+.green{color:#1ed760}.bg-green{background:#1ed760}.hide{display:none!important}
+input,select{outline:none}.tab{cursor:pointer}
+</style>
+</head>
+<body>
+<header class="sticky top-0 z-30 bg-black/95 border-b border-gray-800">
+ <div class="max-w-6xl mx-auto p-4 flex justify-between items-center">
+  <div><b class="text-xl">WAKHAMA</b> <span class="green">Distributor</span></div>
+  <div id="userNav" class="text-sm"></div>
+ </div>
+</header>
+
+<main class="max-w-6xl mx-auto p-4">
+<section id="setupWarning" class="hidden bg-yellow-900/40 border border-yellow-600 rounded-xl p-4 mb-5">
+ <b>Supabase setup ikufunika.</b><br><span id="setupText"></span>
+</section>
+
+<section id="auth" class="grid md:grid-cols-2 gap-5 py-10">
+ <div class="card rounded-2xl p-6">
+  <h2 class="text-2xl font-bold mb-4">Create Account</h2>
+  <input id="rname" placeholder="Dzina" class="w-full p-3 mb-3 bg-black rounded">
+  <input id="remail" type="email" placeholder="Email" class="w-full p-3 mb-3 bg-black rounded">
+  <input id="rphone" placeholder="Phone (+265...)" class="w-full p-3 mb-3 bg-black rounded">
+  <input id="rpass" type="password" placeholder="Password (6+)" class="w-full p-3 mb-3 bg-black rounded">
+  <button onclick="register()" class="bg-green text-black font-bold p-3 rounded w-full">Pangani Account</button>
+ </div>
+ <div class="card rounded-2xl p-6">
+  <h2 class="text-2xl font-bold mb-4">Login</h2>
+  <input id="lemail" type="email" placeholder="Email" class="w-full p-3 mb-3 bg-black rounded">
+  <input id="lpass" type="password" placeholder="Password" class="w-full p-3 mb-3 bg-black rounded">
+  <button onclick="login()" class="bg-green text-black font-bold p-3 rounded w-full">Login</button>
+ </div>
+</section>
+
+<section id="dashboard" class="hidden py-6">
+ <div class="flex flex-wrap gap-2 mb-6">
+  <button onclick="showTab('music')" class="bg-green text-black px-4 py-2 rounded">Listen</button>
+  <button onclick="showTab('upload')" class="card px-4 py-2 rounded">Upload Nyimbo</button>
+  <button onclick="showTab('wallet')" class="card px-4 py-2 rounded">Wallet</button>
+  <button onclick="showTab('mySongs')" class="card px-4 py-2 rounded">My Songs</button>
+  <button onclick="logout()" class="bg-red-700 px-4 py-2 rounded">Logout</button>
+ </div>
+
+ <div id="musicTab">
+  <h1 class="text-3xl font-black mb-2">Nyimbo Zovomerezeka</h1>
+  <p class="text-gray-400 mb-5">Mvetserani nyimbo za artists a Wakhama.</p>
+  <div id="tracks" class="grid md:grid-cols-2 gap-5"></div>
+ </div>
+
+ <div id="uploadTab" class="hidden card rounded-2xl p-6">
+  <h2 class="text-2xl font-bold mb-2">Upload Nyimbo</h2>
+  <p class="text-yellow-400 text-sm mb-4">Upload fee: K5,000. Payment iyenera kutsimikizidwa ndi Admin.</p>
+  <form id="uploadForm" class="space-y-3">
+   <input name="artistName" required placeholder="Artist Name" class="w-full p-3 bg-black rounded">
+   <input name="songTitle" required placeholder="Song Title" class="w-full p-3 bg-black rounded">
+   <select name="genre" required class="w-full p-3 bg-black rounded">
+    <option value="">Genre</option><option>Afrobeats</option><option>Amapiano</option><option>Hip Hop</option><option>Gospel</option><option>Dancehall</option><option>R&B</option><option>Other</option>
+   </select>
+   <input name="releaseDate" type="date" class="w-full p-3 bg-black rounded">
+   <label>Audio MP3/WAV<input name="audio" required type="file" accept=".mp3,.wav,audio/*" class="w-full p-3 bg-black rounded"></label>
+   <label>Cover Art<input name="cover" required type="file" accept="image/*" class="w-full p-3 bg-black rounded"></label>
+   <input name="paymentTxRef" required placeholder="Mobile Money transaction/reference number" class="w-full p-3 bg-black rounded">
+   <button class="bg-green text-black font-bold px-5 py-3 rounded">Submit Upload</button>
+  </form>
+  <div id="uploadMsg" class="mt-3"></div>
+ </div>
+
+ <div id="walletTab" class="hidden">
+  <div class="grid md:grid-cols-4 gap-3">
+   <div class="card p-5 rounded"><small>Streams</small><b id="streams" class="block text-2xl">0</b></div>
+   <div class="card p-5 rounded"><small>Earned</small><b id="earned" class="block text-2xl green">K0</b></div>
+   <div class="card p-5 rounded"><small>Pending Withdrawal</small><b id="pending" class="block text-2xl">K0</b></div>
+   <div class="card p-5 rounded"><small>Available</small><b id="balance" class="block text-2xl green">K0</b></div>
+  </div>
+  <div class="card rounded-2xl p-6 mt-5">
+   <h2 class="text-xl font-bold mb-3">Withdraw Mobile Money</h2>
+   <form id="withdrawForm" class="space-y-3">
+    <input name="phone" required placeholder="Mobile number" class="w-full p-3 bg-black rounded">
+    <select name="provider" class="w-full p-3 bg-black rounded"><option>Airtel Money</option><option>TNM Mpamba</option></select>
+    <input name="amount" required type="number" min="1000" placeholder="Amount MWK" class="w-full p-3 bg-black rounded">
+    <button class="bg-green text-black font-bold p-3 rounded w-full">Request Withdrawal</button>
+   </form>
+  </div>
+ </div>
+
+ <div id="mySongsTab" class="hidden">
+  <h2 class="text-2xl font-bold mb-4">My Songs</h2>
+  <div id="mySongs" class="space-y-3"></div>
+ </div>
+</section>
+</main>
+
+<script>
+const SUPABASE_URL = "https://cujvhqwnxdgxawylyzsp.supabase.co";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN1anZocXdueGRneGF3eWx5enNwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTA0MDc4OTgsImV4cCI6MjEwNTk4Mzg5OH0.niDWmseYMc6zvP4eqUBA7NNF9gsl5p4u4X05rN-tVGw";
+let sb=null, currentUser=null;
+
+function esc(s){return String(s??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+function money(n){return "K"+Number(n||0).toLocaleString()}
+function ready(){
+ if(!SUPABASE_ANON_KEY || SUPABASE_ANON_KEY.includes("PASTE_")){
+   setupWarning.classList.remove("hidden"); setupText.innerText="index.html muike Supabase anon/publishable key yanu pa SUPABASE_ANON_KEY."; return false;
+ }
+ sb=supabase.createClient(SUPABASE_URL,SUPABASE_ANON_KEY); return true;
+}
+async function register(){
+ if(!ready())return;
+ const name=rname.value.trim(),email=remail.value.trim(),phone=rphone.value.trim(),password=rpass.value;
+ if(password.length<6)return alert("Password ikhale 6+ characters.");
+ const {data,error}=await sb.auth.signUp({email,password,options:{data:{name,phone}}});
+ if(error)return alert(error.message);
+ if(!data.session)return alert("Account yapangidwa. Tsegulani email yanu kuti mutsimikize account, kenako login.");
+ await load();
+}
+async function login(){
+ if(!ready())return;
+ const {data,error}=await sb.auth.signInWithPassword({email:lemail.value.trim(),password:lpass.value});
+ if(error)return alert(error.message);
+ currentUser=data.user; await load();
+}
+async function logout(){if(sb)await sb.auth.signOut();location.reload()}
+async function load(){
+ if(!ready())return;
+ const {data:{session}}=await sb.auth.getSession();
+ currentUser=session?.user||null;
+ if(!currentUser){auth.classList.remove("hidden");dashboard.classList.add("hidden");return}
+ auth.classList.add("hidden");dashboard.classList.remove("hidden");
+ userNav.innerText=currentUser.user_metadata?.name||currentUser.email;
+ await Promise.all([loadTracks(),loadWallet(),loadMySongs()]);
+}
+function showTab(tab){
+ ["musicTab","uploadTab","walletTab","mySongsTab"].forEach(x=>document.getElementById(x).classList.add("hidden"));
+ document.getElementById(tab+"Tab").classList.remove("hidden");
+ if(tab==="wallet")loadWallet(); if(tab==="music")loadTracks(); if(tab==="mySongs")loadMySongs();
+}
+async function loadTracks(){
+ const {data,error}=await sb.from("songs").select("*").eq("status","Approved").order("created_at",{ascending:false});
+ if(error){tracks.innerHTML="<p>"+esc(error.message)+"</p>";return}
+ tracks.innerHTML=(data||[]).map(s=>`
+ <div class="card p-4 rounded-xl">
+  <img src="${esc(s.cover_url)}" class="w-full aspect-square object-cover rounded-lg mb-3">
+  <b>${esc(s.song_title)}</b><p class="text-gray-400">${esc(s.artist_name)} • ${esc(s.genre)}</p>
+  <audio controls class="w-full mt-3" src="${esc(s.audio_url)}" onplay="countStream('${s.id}')"></audio>
+  ${s.spotify_url?`<a class="text-green-400 text-sm inline-block mt-2" target="_blank" href="${esc(s.spotify_url)}">Open Spotify</a>`:""}
+ </div>`).join("")||"<p class='text-gray-500'>Palibe nyimbo approved pano.</p>";
+}
+async function countStream(id){await sb.rpc("record_stream",{song_uuid:id})}
+async function loadWallet(){
+ const {data,error}=await sb.rpc("artist_dashboard");
+ if(error)return;
+ const d=data?.[0]||data||{};
+ streams.innerText=Number(d.total_streams||0).toLocaleString();
+ earned.innerText=money(d.total_earnings);
+ pending.innerText=money(d.pending_withdrawal);
+ balance.innerText=money(d.available_balance);
+}
+async function loadMySongs(){
+ const {data,error}=await sb.from("songs").select("*").eq("artist_id",currentUser.id).order("created_at",{ascending:false});
+ if(error){mySongs.innerHTML="<p>"+esc(error.message)+"</p>";return}
+ mySongs.innerHTML=(data||[]).map(s=>`
+ <div class="card rounded-xl p-4 flex gap-4 items-center">
+  <img src="${esc(s.cover_url)}" class="w-20 h-20 object-cover rounded">
+  <div class="flex-1"><b>${esc(s.song_title)}</b><p class="text-gray-400">${esc(s.artist_name)} • ${esc(s.status)}</p><p class="text-sm">Streams: ${s.streams||0} • Earnings: ${money(s.earnings_mwk)}</p><p class="text-xs text-yellow-400">${esc(s.payment_status)}</p></div>
+ </div>`).join("")||"<p class='text-gray-500'>Simunapange upload.</p>";
+}
+uploadForm.onsubmit=async e=>{
+ e.preventDefault(); if(!currentUser)return;
+ uploadMsg.innerText="Ikutumiza files...";
+ const f=new FormData(e.target), audio=f.get("audio"),cover=f.get("cover");
+ const audioPath=currentUser.id+"/"+Date.now()+"-"+audio.name.replace(/[^a-zA-Z0-9._-]/g,"_");
+ const coverPath=currentUser.id+"/"+Date.now()+"-"+cover.name.replace(/[^a-zA-Z0-9._-]/g,"_");
+ let r=await sb.storage.from("music").upload(audioPath,audio); if(r.error)return uploadMsg.innerText=r.error.message;
+ r=await sb.storage.from("covers").upload(coverPath,cover,{upsert:false}); if(r.error)return uploadMsg.innerText=r.error.message;
+ const audioUrl=sb.storage.from("music").getPublicUrl(audioPath).data.publicUrl;
+ const coverUrl=sb.storage.from("covers").getPublicUrl(coverPath).data.publicUrl;
+ const {error}=await sb.from("songs").insert({
+  artist_id:currentUser.id,artist_name:f.get("artistName"),song_title:f.get("songTitle"),genre:f.get("genre"),
+  release_date:f.get("releaseDate")||null,audio_url:audioUrl,cover_url:coverUrl,
+  payment_tx_ref:f.get("paymentTxRef"),payment_status:"Pending",status:"Pending"
+ });
+ if(error)return uploadMsg.innerText=error.message;
+ uploadMsg.innerText="Upload yaperekedwa. Admin ayenera kutsimikizira K5,000 payment.";
+ e.target.reset();loadMySongs();
+};
+withdrawForm.onsubmit=async e=>{
+ e.preventDefault();const f=new FormData(e.target);
+ const {data,error}=await sb.rpc("request_withdrawal",{p_phone:f.get("phone"),p_provider:f.get("provider"),p_amount:Number(f.get("amount"))});
+ alert(error?error.message:"Withdrawal request yatumizidwa kwa Admin."); if(!error){e.target.reset();loadWallet()}
+};
+ready();
+if(sb)sb.auth.onAuthStateChange(()=>load());
+else {try{ready();sb?.auth.onAuthStateChange(()=>load())}catch(e){}}
+</script>
+</body></html>
